@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -113,14 +114,19 @@ public class LoaderManager {
      */
     public static boolean unregisterLoader(@NotNull Class<? extends Loader> klass){
         boolean removed = false;
-        for(String ext : matchers.keySet()){
-            PathMatcher matcher = matchers.get(ext);
+        Iterator<Map.Entry<String, PathMatcher>> iter = matchers.entrySet().iterator();
+        while(iter.hasNext()){
+            Map.Entry<String, PathMatcher> entry = iter.next();
+            String extension = entry.getKey();
+            PathMatcher matcher = entry.getValue();
             Loader loader = loaders.get(matcher);
-            if(loader == null) continue;
-            // klass == loader.getClass() will have issues with multiple class loaders
+            
+            if(loader == null)
+                continue;
+            
             if(loader.getClass().getName().equals(klass.getName())){
-                loaders.remove(matcher);
-                matchers.remove(ext);
+                iter.remove();
+                matchers.remove(extension);
                 removed = true;
             }
         }
